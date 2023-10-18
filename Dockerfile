@@ -1,5 +1,6 @@
 # pytorchが提供するpytorch latestイメーjiをベースとしてダウンロード
-FROM pytorch/pytorch:latest
+# for cuda under 11.4
+FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
 
 # Docker実行してシェルに入ったときの初期ディレクトリ（ワークディレクトリ）の設定
 WORKDIR /root/
