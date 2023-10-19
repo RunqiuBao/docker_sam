@@ -8,6 +8,7 @@ docker run -it \
     --gpus all \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --volume="/usr/local:/usr/local" \
+    --volume="../SegmentAnythingPortable:/root/code/SegmentAnythingPortable" \
     --name=sampytorch \
     sampytorch \
     bash
