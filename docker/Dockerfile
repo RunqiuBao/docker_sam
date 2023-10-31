@@ -11,5 +11,8 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
+# install minimum apps
+RUN apt update && apt-get -y install git vim less autoconf cmake
+
 # check pytorch version
 RUN python -c "import torch; print('using pytorch: ', torch.__version__)"
