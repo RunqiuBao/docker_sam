@@ -1,6 +1,6 @@
 # pytorchが提供するpytorch latestイメーjiをベースとしてダウンロード
-# for cuda under 11.4
-FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
+# for cuda 12.2
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
 # Docker実行してシェルに入ったときの初期ディレクトリ（ワークディレクトリ）の設定
 WORKDIR /root/
@@ -12,7 +12,12 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
 # install minimum apps
-RUN apt update && apt-get -y install git vim less autoconf cmake
+RUN apt update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+RUN apt-get -y install git vim less cmake
+
+# install opencv python
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && pip install opencv-python
 
 # check pytorch version
 RUN python -c "import torch; print('using pytorch: ', torch.__version__)"

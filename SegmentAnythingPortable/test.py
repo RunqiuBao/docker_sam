@@ -1,3 +1,4 @@
+import numpy
 import torch
 from transformers import SamModel, SamProcessor
 
@@ -18,7 +19,8 @@ idx = 10
 
 # load image
 image = dataset[idx]["image"]
-cv2.imwrite("/root/data/sample.png", image)
+
+cv2.imwrite("/root/data/sample.png", numpy.array(image))
 
 # load ground truth segmentation
 ground_truth_seg = np.array(dataset[idx]["label"])
@@ -56,7 +58,7 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # prepare image + box prompt for the model
-inputs = processor(image, input_boxes=[input_boxes], return_tensors="pt").to(device)
+inputs = processor(image, input_boxes=[[[input_boxes]]], return_tensors="pt").to(device)
 for k,v in inputs.items():
   print(k,v.shape)
 
@@ -73,4 +75,4 @@ medsam_seg_prob = torch.sigmoid(outputs.pred_masks.squeeze(1))
 medsam_seg_prob = medsam_seg_prob.cpu().numpy().squeeze()
 medsam_seg = (medsam_seg_prob > 0.5).astype(np.uint8)
 
-cv2.imwrite("/root/data/inference.png", medsam_seg)
+cv2.imwrite("/root/data/inference.png", medsam_seg * 255)
