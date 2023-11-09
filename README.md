@@ -6,4 +6,7 @@
 
 
 ## dev plans:
-- [ ] reinstall cuda toolkit to support newest pytorch image.
+- [x] reinstall cuda toolkit to support newest pytorch image.
+- [x] run training with the medical dataset in the tutorial2.
+- [ ] make metalpieces dataset
+- [ ] run training with the metalpieces dataset.
