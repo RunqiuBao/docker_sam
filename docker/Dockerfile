@@ -19,5 +19,6 @@ RUN apt-get -y install git vim less cmake
 # install opencv python
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && pip install opencv-python
 
-# check pytorch version
-RUN python -c "import torch; print('using pytorch: ', torch.__version__)"
+# add useful commands to .bashrc
+RUN echo 'alias kk="kill -9 %"' >> ~/.bashrc
+
