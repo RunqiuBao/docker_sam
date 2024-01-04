@@ -57,6 +57,7 @@ if __name__ == "__main__":
         epoch_losses = []
         for batch in tqdm(test_dataloader):
             # forward pass
+            from IPython import embed; embed()
             outputs = model(pixel_values=batch["pixel_values"].to(device),
                             input_boxes=batch["input_boxes"].to(device),
                             multimask_output=False)

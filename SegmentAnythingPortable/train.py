@@ -20,12 +20,18 @@ sys.path.append('dataset/')
 from ftsam import FtSamDataset
 
 
-def train(epoch, train_dataloader, model, seg_loss, optimizer):
+def train(epoch, train_dataloader, model, seg_loss, optimizer, promptType):
     model.train()
     epoch_losses = []
     for batch in tqdm(train_dataloader):
       # forward pass
-      outputs = model(pixel_values=batch["pixel_values"].to(device),
+      if promptType == "points":
+        outputs  = model(pixel_values=batch["pixel_values"].to(device),
+                         input_points=batch["input_points"].to(device),
+                         input_labels=batch["input_labels"].to(device),
+                         multimask_output=False)
+      elif promptType == "bbox":
+        outputs = model(pixel_values=batch["pixel_values"].to(device),
                       input_boxes=batch["input_boxes"].to(device),
                       multimask_output=False)
 
@@ -49,15 +55,22 @@ def train(epoch, train_dataloader, model, seg_loss, optimizer):
     print(f'Mean loss: {mean(epoch_losses)}')
     return mean(epoch_losses)
 
-def valid(epoch, valid_dataloader, model, seg_loss):
+def valid(epoch, valid_dataloader, model, seg_loss, promptType):
     model.eval()
     with torch.no_grad():
         epoch_losses = []
         for batch in tqdm(valid_dataloader):
             # forward pass
-            outputs = model(pixel_values=batch["pixel_values"].to(device),
+            if promptType == "points":
+              outputs  = model(pixel_values=batch["pixel_values"].to(device),
+                               input_points=batch["input_points"].to(device),
+                               input_labels=batch["input_labels"].to(device),
+                               multimask_output=False)
+            elif promptType == "bbox":
+              outputs = model(pixel_values=batch["pixel_values"].to(device),
                             input_boxes=batch["input_boxes"].to(device),
                             multimask_output=False)
+
             # compute loss
             predicted_masks = outputs.pred_masks.squeeze(1)
             ground_truth_masks = batch["ground_truth_mask"].float().to(device)
@@ -71,12 +84,12 @@ def valid(epoch, valid_dataloader, model, seg_loss):
 
 if __name__ == "__main__":
 #    dataset = load_dataset("nielsr/breast-cancer", split="train")
-    dataset = FtSamDataset("/root/data2/ftsam/", "train")
+    dataset = FtSamDataset("/root/data2/ftsam2024/", "train")
     processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
-    train_dataset = SAMDataset(dataset=dataset, processor=processor)
+    train_dataset = SAMDataset(dataset=dataset, processor=processor, promptType='points')
     train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-    dataset = FtSamDataset("/root/data2/ftsam/", "valid")
-    valid_dataset = SAMDataset(dataset=dataset, processor=processor)
+    dataset = FtSamDataset("/root/data2/ftsam2024/", "valid")
+    valid_dataset = SAMDataset(dataset=dataset, processor=processor, promptType='points')
     valid_dataloader = DataLoader(valid_dataset, batch_size=2, shuffle=True)
     model = SamModel.from_pretrained("facebook/sam-vit-base")
 
@@ -104,8 +117,8 @@ if __name__ == "__main__":
     logger.SaveState(originalState, filename='original.pth.tar')
 
     for epoch in range(num_epochs):
-        trainResultMetrics = train(epoch, train_dataloader, model, seg_loss, optimizer)
-        validResultMetrics = valid(epoch, valid_dataloader, model, seg_loss)
+        trainResultMetrics = train(epoch, train_dataloader, model, seg_loss, optimizer, promptType='points')
+        validResultMetrics = valid(epoch, valid_dataloader, model, seg_loss, promptType='points')
         state = {
             'epoch': epoch,
             'model': "samRefine",

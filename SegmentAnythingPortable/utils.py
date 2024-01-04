@@ -1,5 +1,21 @@
 import numpy
+import six
 
+
+def SampleRandomNPointsFromMask(mask, numPoints, randomIndices=None):
+  '''
+  Uniformly sample N points in the Mask. Return the (X, Y) coordinates.
+  '''
+  coordsMask = numpy.where(mask == 1)
+  if randomIndices is None:
+    indicesRaveledMask = numpy.arange(coordsMask[0].shape[0])
+    rng = numpy.random.default_rng() 
+    randomIndices = rng.choice(indicesRaveledMask, numPoints, replace=False)
+#  from IPython import embed; embed()
+  sampleXY = numpy.hstack([coordsMask[1][randomIndices][:, numpy.newaxis], coordsMask[0][randomIndices][:, numpy.newaxis]])
+  samplePointsLabels = numpy.ones((numPoints,))
+  return sampleXY, samplePointsLabels
+  
 
 def get_bounding_box(ground_truth_map):
   # get bounding box from mask
@@ -17,7 +33,7 @@ def get_bounding_box(ground_truth_map):
   return bbox
 
 
-# help printing a table of report, in logger.
+# help printing a table of report, in logger.p
 def CreatePrintableTable(rows, headers):
     strRows = []
     for row in rows:
