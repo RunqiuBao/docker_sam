@@ -24,32 +24,32 @@ def train(epoch, train_dataloader, model, seg_loss, optimizer, promptType):
     model.train()
     epoch_losses = []
     for batch in tqdm(train_dataloader):
-      # forward pass
-      if promptType == "points":
-        outputs  = model(pixel_values=batch["pixel_values"].to(device),
-                         input_points=batch["input_points"].to(device),
-                         input_labels=batch["input_labels"].to(device),
-                         multimask_output=False)
-      elif promptType == "bbox":
-        outputs = model(pixel_values=batch["pixel_values"].to(device),
-                      input_boxes=batch["input_boxes"].to(device),
-                      multimask_output=False)
-
-      # compute loss
-      predicted_masks = outputs.pred_masks.squeeze(1)
-      ground_truth_masks = batch["ground_truth_mask"].float().to(device)
-      gtHeight, gtWidth = ground_truth_masks.shape[-2:]
-      predicted_masks = F.interpolate(predicted_masks, size=(gtHeight, gtWidth))
-#          from IPython import embed; embed()
-      loss = seg_loss(predicted_masks, ground_truth_masks.unsqueeze(1))
-
-      # backward pass (compute gradients of parameters w.r.t. loss)
-      optimizer.zero_grad()
-      loss.backward()
-
-      # optimize
-      optimizer.step()
-      epoch_losses.append(loss.item())
+	# forward pass
+        if promptType == "points":
+            outputs = model(pixel_values=batch["pixel_values"].to(device),
+	                   input_points=batch["input_points"].to(device),
+	                   input_labels=batch["input_labels"].to(device),
+	                   multimask_output=False)
+        elif promptType == "bbox":
+            outputs = model(pixel_values=batch["pixel_values"].to(device),
+	                input_boxes=batch["input_boxes"].to(device),
+	                multimask_output=False)
+	
+	# compute loss
+        predicted_masks = outputs.pred_masks.squeeze(1)
+        ground_truth_masks = batch["ground_truth_mask"].float().to(device)
+        gtHeight, gtWidth = ground_truth_masks.shape[-2:]
+        predicted_masks = F.interpolate(predicted_masks, size=(gtHeight, gtWidth))
+        #          from IPython import embed; embed()
+        loss = seg_loss(predicted_masks, ground_truth_masks.unsqueeze(1))
+	
+	# backward pass (compute gradients of parameters w.r.t. loss)
+        optimizer.zero_grad()
+        loss.backward()
+	
+	# optimize
+        optimizer.step()
+        epoch_losses.append(loss.item())
 
     print(f'EPOCH: {epoch}')
     print(f'Mean loss: {mean(epoch_losses)}')
@@ -62,12 +62,12 @@ def valid(epoch, valid_dataloader, model, seg_loss, promptType):
         for batch in tqdm(valid_dataloader):
             # forward pass
             if promptType == "points":
-              outputs  = model(pixel_values=batch["pixel_values"].to(device),
+                outputs  = model(pixel_values=batch["pixel_values"].to(device),
                                input_points=batch["input_points"].to(device),
                                input_labels=batch["input_labels"].to(device),
                                multimask_output=False)
             elif promptType == "bbox":
-              outputs = model(pixel_values=batch["pixel_values"].to(device),
+                outputs = model(pixel_values=batch["pixel_values"].to(device),
                             input_boxes=batch["input_boxes"].to(device),
                             multimask_output=False)
 
@@ -85,13 +85,13 @@ def valid(epoch, valid_dataloader, model, seg_loss, promptType):
 if __name__ == "__main__":
 #    dataset = load_dataset("nielsr/breast-cancer", split="train")
     dataset = FtSamDataset("/root/data2/ftsam2024/", "train")
-    processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
+    processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
     train_dataset = SAMDataset(dataset=dataset, processor=processor, promptType='points')
     train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
     dataset = FtSamDataset("/root/data2/ftsam2024/", "valid")
     valid_dataset = SAMDataset(dataset=dataset, processor=processor, promptType='points')
     valid_dataloader = DataLoader(valid_dataset, batch_size=2, shuffle=True)
-    model = SamModel.from_pretrained("facebook/sam-vit-base")
+    model = SamModel.from_pretrained("facebook/sam-vit-huge")
 
     # make sure we only compute gradients for mask decoder
     for name, param in model.named_parameters():
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
-    logger = Logger("/root/data2/ftsam/logs/")
+    logger = Logger("/root/data2/ftsam2024/logs/")
 
     originalState = {
         'epoch': -1,

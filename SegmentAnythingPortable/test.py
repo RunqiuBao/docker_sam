@@ -37,12 +37,14 @@ if __name__ == "__main__":
     if not os.path.isdir(args.debugpath):
         os.makedirs(args.debugpath)
 
+    promptType = 'points'
+
     # loading models, weights and datasets
-    dataset = FtSamDataset("/root/data2/ftsam/", "valid")
-    processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
+    dataset = FtSamDataset("/root/data2/testsam/", "valid")
+    processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
     test_dataset = SAMDataset(dataset=dataset, processor=processor)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
-    model = SamModel.from_pretrained("facebook/sam-vit-base")
+    model = SamModel.from_pretrained("facebook/sam-vit-huge")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
     checkpoint = torch.load(args.weightpath, map_location=lambda storage, loc: storage.cuda() if torch.cuda.is_available() else storage.cpu())
@@ -57,10 +59,16 @@ if __name__ == "__main__":
         epoch_losses = []
         for batch in tqdm(test_dataloader):
             # forward pass
-            from IPython import embed; embed()
-            outputs = model(pixel_values=batch["pixel_values"].to(device),
+            if promptType == "bbox":
+                outputs = model(pixel_values=batch["pixel_values"].to(device),
                             input_boxes=batch["input_boxes"].to(device),
                             multimask_output=False)
+            elif promptType == "points":
+                outputs = model(pixel_values=batch["pixel_values"].to(device),
+                          input_points=batch["input_points"].to(device),
+                          input_labels=batch["input_labels"].to(device),
+                          multimask_output=False)
+
             # compute loss
             SaveDebugImages(outputs.pred_masks.squeeze().cpu().numpy(), batch["pixel_values"].squeeze().cpu().permute(1, 2, 0).numpy(), os.path.join(args.debugpath, str(countBatch).zfill(6) + '.png'))
             predicted_masks = outputs.pred_masks.squeeze(1)
